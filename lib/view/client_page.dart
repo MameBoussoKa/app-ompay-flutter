@@ -19,7 +19,7 @@ class _ClientPageState extends State<ClientPage> {
   bool _isPayerSelected = true;
   bool _isSoldeVisible = false;
   bool _isDarkMode = true;
-  bool _isScannerEnabled = true;
+  bool _isScannerEnabled = false;
   String _selectedLanguage = 'Français';
   bool _isLoading = false;
 
@@ -855,151 +855,212 @@ class _ClientPageState extends State<ClientPage> {
 
   Widget _buildDrawer() {
     return Drawer(
-      backgroundColor: _isDarkMode ? const Color(0xFF1C1C1C) : Colors.white,
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: _isDarkMode ? const Color(0xFF0A0A0A) : Colors.grey[200],
-            ),
-            child: Column(
-              children: [
-                Stack(
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.person, size: 50, color: Colors.grey),
+      backgroundColor: const Color(0xFF3A3A3A),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Section Profil
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+              child: Column(
+                children: [
+                  // Photo de profil centrée
+                  Center(
+                    child: CircleAvatar(
+                      radius: 45,
+                      backgroundColor: Colors.grey[300],
+                      child: const Icon(Icons.person, size: 50, color: Colors.grey),
                     ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: _isDarkMode
-                              ? const Color(0xFF1C1C1C)
-                              : Colors.white,
-                          shape: BoxShape.circle,
+                  ),
+                  const SizedBox(height: 16),
+                  // Nom complet
+                  Text(
+                    _userData != null
+                        ? '${_userData!['user']['prenom']} ${_userData!['user']['nom']}'
+                        : 'Utilisateur',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  // Numéro de téléphone
+                  Text(
+                    _userData?['user']?['telephone'] ?? 'Numéro inconnu',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  // Ligne horizontale fine
+                  Container(
+                    height: 1,
+                    color: Colors.white24,
+                    width: double.infinity,
+                  ),
+                ],
+              ),
+            ),
+
+            // Options du menu
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Mode Sombre
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.brightness_6, color: Colors.white, size: 24),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Text(
+                              'Mode Sombre',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Switch(
+                            value: _isDarkMode,
+                            onChanged: (value) {
+                              setState(() {
+                                _isDarkMode = value;
+                              });
+                            },
+                            activeColor: const Color(0xFFFF7900),
+                            activeTrackColor: const Color(0xFFFF7900).withOpacity(0.3),
+                            inactiveThumbColor: Colors.white,
+                            inactiveTrackColor: Colors.grey,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Scanner
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.qr_code_scanner, color: Colors.white, size: 24),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Text(
+                              'Scanner',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Switch(
+                            value: _isScannerEnabled,
+                            onChanged: (value) {
+                              setState(() {
+                                _isScannerEnabled = value;
+                              });
+                            },
+                            activeColor: const Color(0xFFFF7900),
+                            activeTrackColor: const Color(0xFFFF7900).withOpacity(0.3),
+                            inactiveThumbColor: Colors.grey,
+                            inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Langue
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedLanguage = _selectedLanguage == 'Français' ? 'English' : 'Français';
+                          });
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.language, color: Colors.white, size: 24),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                _selectedLanguage,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.arrow_drop_down, color: Colors.white),
+                          ],
                         ),
-                        child: Image.network(
-                          'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=OM_PAY_${_userData?['user']['prenom']}_${_userData?['user']['nom']}',
-                          width: 30,
-                          height: 30,
+                      ),
+                    ),
+
+                    // Déconnexion
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+                      child: InkWell(
+                        onTap: () async {
+                          try {
+                            await widget.authManager.logout();
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                              (route) => false,
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Erreur de déconnexion: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.power_settings_new, color: Color(0xFFFF7900), size: 24),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Text(
+                                'Déconnexion',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  _userData != null
-                      ? '${_userData!['user']['prenom']} ${_userData!['user']['nom']}'
-                      : 'Utilisateur',
-                  style: TextStyle(
-                    color: _isDarkMode ? Colors.white : Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+            ),
+
+            // Version Application
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'OMPAY Version - 1.1.0(35)',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: const Color(0xFFFF7900),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _userData?['telephone'] ?? 'Numéro inconnu',
-                  style: TextStyle(
-                    color: _isDarkMode ? Colors.white70 : Colors.black87,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SwitchListTile(
-            title: Text(
-              'Sombre',
-              style: TextStyle(
-                color: _isDarkMode ? Colors.white : Colors.black,
               ),
             ),
-            value: _isDarkMode,
-            onChanged: (value) {
-              setState(() {
-                _isDarkMode = value;
-              });
-            },
-            secondary: const Icon(Icons.brightness_6, color: Color(0xFFFF7900)),
-            activeColor: const Color(0xFFFF7900),
-          ),
-          SwitchListTile(
-            title: Text(
-              'Scanner',
-              style: TextStyle(
-                color: _isDarkMode ? Colors.white : Colors.black,
-              ),
-            ),
-            value: _isScannerEnabled,
-            onChanged: (value) {
-              setState(() {
-                _isScannerEnabled = value;
-              });
-            },
-            secondary: const Icon(
-              Icons.qr_code_scanner,
-              color: Color(0xFFFF7900),
-            ),
-            activeColor: const Color(0xFFFF7900),
-          ),
-          ListTile(
-            leading: const Icon(Icons.language, color: Color(0xFFFF7900)),
-            title: Text(
-              _selectedLanguage,
-              style: TextStyle(
-                color: _isDarkMode ? Colors.white : Colors.black,
-              ),
-            ),
-            trailing: const Icon(Icons.keyboard_arrow_down),
-            onTap: () {
-              // Changer la langue
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(
-              Icons.power_settings_new,
-              color: Color(0xFFFF7900),
-            ),
-            title: Text(
-              'Se déconnecter',
-              style: TextStyle(
-                color: _isDarkMode ? Colors.white : Colors.black,
-              ),
-            ),
-            onTap: () async {
-              try {
-                await widget.authManager.logout();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Erreur de déconnexion: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'OMPAY Version - 1.1.0(35)',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: const Color(0xFFFF7900), fontSize: 12),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
